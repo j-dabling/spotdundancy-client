@@ -2,6 +2,11 @@
   "manifest_version": 3,
   "name": "Spotify Playlist Popup",
   "version": "1.0",
+  "content_security_policy": {
+    "extension_pages": "script-src 'self' 'unsafe-inline'; object-src 'self'"
+    // "extension_pages": "script-src 'self'; object-src 'self'"
+    // "sandbox": ["allow-scripts", "allow-same-origin"]
+  },
   "description": "Creates a popup for Spotify playlists.",
   "permissions": ["activeTab"],
   "background": {
@@ -27,3 +32,8 @@
     }
   ]
 }
+
+// When I set the content_security_policy to insclude 'unsafe-inline' I get the following error:
+
+// 'content_security_policy.extension_pages': Insecure CSP value "'unsafe-inline'" in directive 'script-src'.
+// Could not load manifest.

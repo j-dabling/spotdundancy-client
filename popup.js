@@ -16,30 +16,111 @@ document.addEventListener("DOMContentLoaded", function () {
     window.close();
   });
 
+
+
   collectPlaylistButton.addEventListener("click", async () => {
-    const url = urlElement.textContent;
-    // I should probably hide this... ill ask jacob about it
-    const clientId = '6c07df458f764d6eba746f4f3d282efc';
-    const clientSecret = '13e852c924834ab9a87c2e4d9f4c3215';
+    // Check to make sure the user has input Spotify API tokens.
+    // var clientId = getCookie("clientId")
+    var clientId = localStorage.getItem("clientId");
+    // var clientSecret = getCookie("clientSecret")
+    var clientSecret = localStorage.getItem("clientSecret");
 
-    // Get client access token
-    const accessToken = await getAccessToken(clientId, clientSecret);
-
-    if (accessToken) {
-      // Get playlist details
-      const playlistData = await getPlaylistDetails(url, accessToken);
-
-      if (playlistData) {
-        // Save playlist to CSV
-        savePlaylistToCSV(playlistData.playlistName, playlistData.tracks);
-      } else {
-        console.error('Failed to get playlist details');
-      }
-    } else {
-      console.error('Failed to get access token');
+    if (clientId !== null && clientSecret !== null) {
+      // Cookies are preset, continue on as expected.
+      main()
     }
+    else {
+      // Cookies are missing, present form to enter and store cookies.
+      var enterAPIform = `
+        <form id="credentialsForm'>
+          <label for="clientId">Enter your Spotify Client ID:</label>
+          <input type="text" id="clientId" name="clientId" required>
+
+          <label for="clientSecret"> Enter your Spotify Client Secret:</label>
+          <input type="text" id="clientSecret" name="clientSecret" required>
+
+          <button type="button" onclick="submitCredentialsForm()">Save</button>
+        </form>
+      `;
+
+      document.body.innerHTML += enterAPIform;
+    }
+
+    // const url = urlElement.textContent;
+    // // I should probably hide this... ill ask jacob about it
+    // const clientId = '6c07df458f764d6eba746f4f3d282efc';
+    // const clientSecret = '13e852c924834ab9a87c2e4d9f4c3215';
+
+    // // Get client access token
+    // const accessToken = await getAccessToken(clientId, clientSecret);
+
+    // if (accessToken) {
+    //   // Get playlist details
+    //   const playlistData = await getPlaylistDetails(url, accessToken);
+
+    //   if (playlistData) {
+    //     // Save playlist to CSV
+    //     savePlaylistToCSV(playlistData.playlistName, playlistData.tracks);
+    //   } else {
+    //     console.error('Failed to get playlist details');
+    //   }
+    // } else {
+    //   console.error('Failed to get access token');
+    // }
   });
 });
+
+
+async function main() {
+  const url = urlElement.textContent;
+  // I should probably hide this... ill ask jacob about it
+  // const clientId = '6c07df458f764d6eba746f4f3d282efc';
+  // const clientSecret = '13e852c924834ab9a87c2e4d9f4c3215';
+
+
+  // Check if access token is already a valid cookie.
+  var accessToken = localStorage.getItem("accessToken"); 
+  if (accessToken == null) {
+    // Access token is not found or invalid. One will need to be obtained before continuing.
+    const clientId = localStorage.getItem("clientId");
+    const clientSecret = localStorage.getItem("clientSecret");
+    const accessToken = await getAccessToken(clientId, clientSecret);
+  }
+  
+  // Access token is valid and ready to proceed with existing token.
+
+  // // Get client access token
+  // const accessToken = await getAccessToken(clientId, clientSecret);
+
+  if (accessToken) {
+    // Get playlist details
+    const playlistData = await getPlaylistDetails(url, accessToken);
+
+    if (playlistData) {
+      // Save playlist to CSV
+      savePlaylistToCSV(playlistData.playlistName, playlistData.tracks);
+    } else {
+      console.error('Failed to get playlist details');
+    }
+  } else {
+    console.error('Failed to get access token');
+  }
+}
+
+
+function submitCredentialsForm() {
+  // Handle the form submission by storing values in secure cookies.
+  var clientIdValue = document.getElementById("clientId").value;
+  var clientSecretValue = document.getElementById("clientSecret").value;
+
+  document.cookie = "clientId=" + clientIdValue + "; Secure; HttpOnly";
+  document.cookie = "clientSecret=" + clientSecretValue + "; Secure; HttpOnly";
+
+  // Remove the form and return to the original interface.
+  document.getElementById("credentialsForm").remove();
+  main();
+}
+
 
 async function savePlaylistToCSV(playlistName, playlistDetails) {
   try {
