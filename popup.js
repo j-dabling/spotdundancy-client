@@ -1,8 +1,12 @@
 // popup.js
+
+
+// Main Event listener for popup.
 document.addEventListener("DOMContentLoaded", function () {
   const urlElement = document.getElementById("url");
   const closeButton = document.getElementById("closeButton");
   const collectPlaylistButton = document.getElementById("collectPlaylistButton");
+  const saveButton = document.getElementById("saveButton")
 
 
   // Get the current URL and display it in the popup
@@ -17,66 +21,48 @@ document.addEventListener("DOMContentLoaded", function () {
   });
 
 
-
+  // Onclick for the "Collect Playlist" button.
   collectPlaylistButton.addEventListener("click", async () => {
-    // Check to make sure the user has input Spotify API tokens.
-    // var clientId = getCookie("clientId")
+    // Check to make sure the user has input Spotify API tokens previously.
     var clientId = localStorage.getItem("clientId");
-    // var clientSecret = getCookie("clientSecret")
     var clientSecret = localStorage.getItem("clientSecret");
 
     if (clientId !== null && clientSecret !== null) {
       // Cookies are preset, continue on as expected.
       main()
     }
+
     else {
-      // Cookies are missing, present form to enter and store cookies.
-      var enterAPIform = `
-        <form id="credentialsForm'>
-          <label for="clientId">Enter your Spotify Client ID:</label>
-          <input type="text" id="clientId" name="clientId" required>
-
-          <label for="clientSecret"> Enter your Spotify Client Secret:</label>
-          <input type="text" id="clientSecret" name="clientSecret" required>
-
-          <button type="button" onclick="submitCredentialsForm()">Save</button>
-        </form>
-      `;
-
-      document.body.innerHTML += enterAPIform;
+      // Id and Secret are not present in localStorage. Open form for user to input them.
+      document.getElementById("credentialsForm").style.display = 'block';
     }
-
-    // const url = urlElement.textContent;
-    // // I should probably hide this... ill ask jacob about it
-    // const clientId = '6c07df458f764d6eba746f4f3d282efc';
-    // const clientSecret = '13e852c924834ab9a87c2e4d9f4c3215';
-
-    // // Get client access token
-    // const accessToken = await getAccessToken(clientId, clientSecret);
-
-    // if (accessToken) {
-    //   // Get playlist details
-    //   const playlistData = await getPlaylistDetails(url, accessToken);
-
-    //   if (playlistData) {
-    //     // Save playlist to CSV
-    //     savePlaylistToCSV(playlistData.playlistName, playlistData.tracks);
-    //   } else {
-    //     console.error('Failed to get playlist details');
-    //   }
-    // } else {
-    //   console.error('Failed to get access token');
-    // }
   });
+
+
+  // Onclick for the "Save Tokens" button.
+  saveButton.addEventListener("click", async () => {
+    // Handle the form submission by storing values in localStorage.
+    var clientIdValue = document.getElementById("clientId").value;
+    var clientSecretValue = document.getElementById("clientSecret").value;
+
+    localStorage.setItem("clientId", clientIdValue);
+    localStorage.setItem("clientSecret", clientSecretValue);
+
+    // Prevent the pop-up from auto-refreshing (useful for debugging.) 
+    // event.preventDefault();
+
+    // Re-hide the credentialsForm after input has been stored.
+    document.getElementById("credentialsForm").style.display = 'none';
+    main();
+  });
+  
 });
 
 
+// Checks for a valid accessToken for Spotify, if one is present, information
+// on the present Spotify playlist will be saved and compiled into a CSV.
 async function main() {
-  const url = urlElement.textContent;
-  // I should probably hide this... ill ask jacob about it
-  // const clientId = '6c07df458f764d6eba746f4f3d282efc';
-  // const clientSecret = '13e852c924834ab9a87c2e4d9f4c3215';
-
+  const url = document.getElementById("url").textContent;
 
   // Check if access token is already a valid cookie.
   var accessToken = localStorage.getItem("accessToken"); 
@@ -84,14 +70,11 @@ async function main() {
     // Access token is not found or invalid. One will need to be obtained before continuing.
     const clientId = localStorage.getItem("clientId");
     const clientSecret = localStorage.getItem("clientSecret");
-    const accessToken = await getAccessToken(clientId, clientSecret);
+    accessToken = await getAccessToken(clientId, clientSecret);
+    localStorage.setItem("accessToken", accessToken);
   }
   
-  // Access token is valid and ready to proceed with existing token.
-
-  // // Get client access token
-  // const accessToken = await getAccessToken(clientId, clientSecret);
-
+  // Access token is valid and ready to proceed.
   if (accessToken) {
     // Get playlist details
     const playlistData = await getPlaylistDetails(url, accessToken);
@@ -103,22 +86,8 @@ async function main() {
       console.error('Failed to get playlist details');
     }
   } else {
-    console.error('Failed to get access token');
+    console.error('Failed to get access token.');
   }
-}
-
-
-function submitCredentialsForm() {
-  // Handle the form submission by storing values in secure cookies.
-  var clientIdValue = document.getElementById("clientId").value;
-  var clientSecretValue = document.getElementById("clientSecret").value;
-
-  document.cookie = "clientId=" + clientIdValue + "; Secure; HttpOnly";
-  document.cookie = "clientSecret=" + clientSecretValue + "; Secure; HttpOnly";
-
-  // Remove the form and return to the original interface.
-  document.getElementById("credentialsForm").remove();
-  main();
 }
 
 

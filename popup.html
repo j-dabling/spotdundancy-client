@@ -3,12 +3,26 @@
 <head>
   <style>
     /* Add your custom CSS styles here */
+    #credentialsForm {
+      display: none;
+    }
   </style>
 </head>
 <body>
   <p id="url"></p>
   <button id="closeButton">Close</button>
   <button id="collectPlaylistButton">Collect Playlist</button>
+
+  <form id="credentialsForm">
+    <label for="clientId">Enter your Spotify Client ID:</label>
+    <input type="text" id="clientId" name="clientId" required>
+
+    <label for="clientSecret"> Enter your Spotify Client Secret:</label>
+    <input type="text" id="clientSecret" name="clientSecret" required>
+
+    <button id="saveButton">Save</button>
+  </form>
+
   <script src="popup.js"></script>
 </body>
 </html>
